@@ -71,6 +71,7 @@ const LineChartComponent: React.FC<LineChartProps> = ({
             stroke={theme === "dark" ? "#999" : "#666"}
             style={{ fontSize: "12px" }}
             tick={{ fill: theme === "dark" ? "#999" : "#666" }}
+            interval={1}
           />
           <YAxis
             domain={yDomain}
