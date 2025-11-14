@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
+  ReferenceArea,
 } from "recharts";
 import type { CursorProps, LineChartProps } from "../types";
 import { formatDate } from "../utils/dataProcessing";
@@ -22,8 +23,15 @@ const LineChartComponent: React.FC<LineChartProps> = ({
                                                         theme,
                                                         timeRange,
                                                         yDomain,
+                                                        isZoomed,
                                                       }) => {
   const chartRef = useRef<HTMLDivElement | null>(null);
+  const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
+  const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
+  const [zoomDomain, setZoomDomain] = useState<{
+    left: string | null;
+    right: string | null;
+  }>({ left: null, right: null });
 
   const strokeDasharray = lineStyle === "line" ? "0" : undefined;
   const curveType = lineStyle === "smooth" ? "monotone" : "linear";
@@ -56,10 +64,88 @@ const LineChartComponent: React.FC<LineChartProps> = ({
 
   const ChartComponent = lineStyle === "area" ? AreaChart : RechartsLineChart;
 
+  const handleMouseDown = (e: { activeLabel?: string } | null) => {
+    if (!isZoomed || !e || !e.activeLabel) return;
+    setRefAreaLeft(e.activeLabel);
+  };
+
+  const handleMouseMove = (e: { activeLabel?: string } | null) => {
+    if (!isZoomed || !refAreaLeft || !e || !e.activeLabel) return;
+    setRefAreaRight(e.activeLabel);
+  };
+
+  const handleMouseUp = () => {
+    if (!isZoomed || !refAreaLeft || !refAreaRight) {
+      setRefAreaLeft(null);
+      setRefAreaRight(null);
+      return;
+    }
+
+    const leftIndex = data.findIndex((d) => d.date === refAreaLeft);
+    const rightIndex = data.findIndex((d) => d.date === refAreaRight);
+
+    if (leftIndex === -1 || rightIndex === -1) {
+      setRefAreaLeft(null);
+      setRefAreaRight(null);
+      return;
+    }
+
+    const [left, right] =
+      leftIndex <= rightIndex
+        ? [refAreaLeft, refAreaRight]
+        : [refAreaRight, refAreaLeft];
+
+    setZoomDomain({ left, right });
+    setRefAreaLeft(null);
+    setRefAreaRight(null);
+  };
+
+  const handleDoubleClick = () => {
+    if (!isZoomed) return;
+    setZoomDomain({ left: null, right: null });
+    setRefAreaLeft(null);
+    setRefAreaRight(null);
+  };
+
+  const displayData =
+    zoomDomain.left && zoomDomain.right
+      ? data.filter((item) => {
+        const leftIndex = data.findIndex((d) => d.date === zoomDomain.left);
+        const rightIndex = data.findIndex((d) => d.date === zoomDomain.right);
+        const currentIndex = data.findIndex((d) => d.date === item.date);
+        return currentIndex >= leftIndex && currentIndex <= rightIndex;
+      })
+      : data;
+
+  React.useEffect(() => {
+    if (!isZoomed) {
+      setZoomDomain({ left: null, right: null });
+      setRefAreaLeft(null);
+      setRefAreaRight(null);
+    }
+  }, [isZoomed]);
+
   return (
-    <div className={styles.chartContainer} ref={chartRef}>
+    <div
+      className={`${styles.chartContainer} ${isZoomed ? styles.zoomEnabled : ""}`}
+      ref={chartRef}
+    >
+      {isZoomed && (
+        <div className={styles.zoomIndicator}>
+          {zoomDomain.left && zoomDomain.right
+            ? "Double-click to reset zoom"
+            : "Click and drag to zoom"}
+        </div>
+      )}
       <ResponsiveContainer width="100%" height="100%">
-        <ChartComponent data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <ChartComponent
+          data={displayData}
+          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onDoubleClick={handleDoubleClick}
+        >
           <CartesianGrid
             strokeDasharray="3 3"
             stroke={theme === "dark" ? "#333" : "#e0e0e0"}
@@ -71,7 +157,7 @@ const LineChartComponent: React.FC<LineChartProps> = ({
             stroke={theme === "dark" ? "#999" : "#666"}
             style={{ fontSize: "12px" }}
             tick={{ fill: theme === "dark" ? "#999" : "#666" }}
-            interval={1}
+            interval={timeRange === 'week' ? undefined : 1}
           />
           <YAxis
             domain={yDomain}
@@ -90,6 +176,16 @@ const LineChartComponent: React.FC<LineChartProps> = ({
             }
             cursor={<CustomCursor/>}
           />
+
+          {refAreaLeft && refAreaRight && (
+            <ReferenceArea
+              x1={refAreaLeft}
+              x2={refAreaRight}
+              strokeOpacity={0.3}
+              fill={theme === "dark" ? "#666" : "#ccc"}
+              fillOpacity={0.3}
+            />
+          )}
 
           {Array.from(selectedVariations.entries()).map(
             ([varId, { name, color }]) => {

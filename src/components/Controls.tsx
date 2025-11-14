@@ -3,23 +3,26 @@ import type { TimeRange, LineStyle, ControlsProps } from "../types";
 import styles from "./Controls.module.scss";
 
 const Controls: React.FC<ControlsProps> = ({
-                                             variations,
-                                             selectedVariations,
-                                             onVariationToggle,
-                                             onVariationSetMultiple,
-                                             timeRange,
-                                             onTimeRangeChange,
-                                             lineStyle,
-                                             onLineStyleChange,
-                                             theme,
-                                             onThemeToggle,
-                                             onExport,
-                                             onShuffle,
-                                             useSelectControls,
-                                             onToggleSelectControls,
-                                           }) => {
+  variations,
+  selectedVariations,
+  onVariationToggle,
+  onVariationSetMultiple,
+  timeRange,
+  onTimeRangeChange,
+  lineStyle,
+  onLineStyleChange,
+  theme,
+  onThemeToggle,
+  onExport,
+  onShuffle,
+  useSelectControls,
+  onToggleSelectControls,
+  isZoomed,
+  onZoomToggle,
+}) => {
   const handleVariationClick = (id: string) => {
-    if (selectedVariations.includes(id) && selectedVariations.length === 1) return;
+    if (selectedVariations.includes(id) && selectedVariations.length === 1)
+      return;
     onVariationToggle(id);
   };
 
@@ -61,26 +64,31 @@ const Controls: React.FC<ControlsProps> = ({
             title="Hold Cmd to select multiple variations"
           >
             {variations.map((variation) => (
-              <option key={variation.id} value={variation.id}>{variation.name}</option>
+              <option key={variation.id} value={variation.id}>
+                {variation.name}
+              </option>
             ))}
           </select>
         ) : (
           <div className={styles.variationsGrid}>
             {variations.map((variation) => {
               const isSelected = selectedVariations.includes(variation.id);
-              const isOnlySelected = isSelected && selectedVariations.length === 1;
+              const isOnlySelected =
+                isSelected && selectedVariations.length === 1;
 
               return (
                 <button
                   key={variation.id}
                   className={`
-                    ${styles.variationButton} 
-                    ${isSelected ? styles.active : ""} 
+                    ${styles.variationButton}
+                    ${isSelected ? styles.active : ""}
                     ${isOnlySelected ? styles.disabled : ""}
                   `}
                   onClick={() => handleVariationClick(variation.id)}
                   disabled={isOnlySelected}
-                  style={{ borderColor: isSelected ? variation.color : undefined, }}
+                  style={{
+                    borderColor: isSelected ? variation.color : undefined,
+                  }}
                 >
                   <span
                     className={styles.colorIndicator}
@@ -189,6 +197,13 @@ const Controls: React.FC<ControlsProps> = ({
             title="Export chart as PNG"
           >
             📥 Export
+          </button>
+          <button
+            className={`${styles.button} ${isZoomed ? styles.active : ""}`}
+            onClick={onZoomToggle}
+            title={isZoomed ? "Disable zoom" : "Enable zoom"}
+          >
+            🔍 Zoom
           </button>
         </div>
       </div>

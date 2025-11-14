@@ -7,7 +7,7 @@ import {
   getChartDomain,
   exportChartToPNG,
   shuffleData,
-  getVariationId
+  getVariationId,
 } from "../utils/dataProcessing";
 import rawDashboardData from "../../public/data.json";
 import type { DashboardData } from "../types";
@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
   }, [dashboardData]);
 
   const [config, setConfig] = useState<ChartConfig>({
-    selectedVariations: variations.map(el => el.id),
+    selectedVariations: variations.map((el) => el.id),
     timeRange: "day" as TimeRange,
     lineStyle: "smooth" as LineStyle,
     theme: "dark" as Theme,
@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
       let newSelected = prev.selectedVariations;
 
       if (newSelected.includes(id)) {
-        if (newSelected.length > 1) newSelected = newSelected.filter(el => el !== id);
+        if (newSelected.length > 1) newSelected = newSelected.filter((el) => el !== id);
       } else newSelected = [...newSelected, id];
 
       return { ...prev, selectedVariations: newSelected };
@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
 
   const handleVariationSetMultiple = (ids: string[]) => {
     if (ids.length === 0) return;
-    setConfig((prev) => ({ ...prev, selectedVariations: ids, }));
+    setConfig((prev) => ({ ...prev, selectedVariations: ids }));
   };
 
   const handleTimeRangeChange = (range: TimeRange) => {
@@ -65,7 +65,10 @@ const Dashboard: React.FC = () => {
   };
 
   const handleThemeToggle = () => {
-    setConfig((prev) => ({ ...prev, theme: prev.theme === "light" ? "dark" : "light", }));
+    setConfig((prev) => ({
+      ...prev,
+      theme: prev.theme === "light" ? "dark" : "light",
+    }));
   };
 
   const handleExport = async () => {
@@ -83,8 +86,19 @@ const Dashboard: React.FC = () => {
     }));
   };
 
+  const handleZoomToggle = () => {
+    setConfig((prev) => ({
+      ...prev,
+      isZoomed: !prev.isZoomed,
+    }));
+  };
+
   const chartData = useMemo(() => {
-    return processChartData(dashboardData.data, config.selectedVariations, config.timeRange);
+    return processChartData(
+      dashboardData.data,
+      config.selectedVariations,
+      config.timeRange,
+    );
   }, [dashboardData.data, config.selectedVariations, config.timeRange]);
 
   const yDomain = useMemo(() => {
@@ -128,6 +142,8 @@ const Dashboard: React.FC = () => {
           onShuffle={handleShuffle}
           useSelectControls={config.useSelectControls}
           onToggleSelectControls={handleToggleSelectControls}
+          isZoomed={config.isZoomed}
+          onZoomToggle={handleZoomToggle}
         />
 
         <div ref={chartRef}>
@@ -138,6 +154,7 @@ const Dashboard: React.FC = () => {
             theme={config.theme}
             timeRange={config.timeRange}
             yDomain={yDomain}
+            isZoomed={config.isZoomed}
           />
         </div>
 

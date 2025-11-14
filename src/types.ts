@@ -11,7 +11,6 @@ export interface DataPoint {
 
 export interface ChartDataPoint {
   date: string;
-
   [key: string]: string | number;
 }
 
@@ -48,7 +47,6 @@ export interface CustomTooltipProps {
   variations: Map<string, { name: string; color: string }>;
 }
 
-
 export interface CursorProps {
   points?: Array<{ x: number; y: number }>;
   height?: number;
@@ -61,6 +59,7 @@ export interface LineChartProps {
   theme: Theme;
   timeRange: "day" | "week";
   yDomain: [number, number];
+  isZoomed: boolean;
 }
 
 export interface ControlsProps {
@@ -78,4 +77,6 @@ export interface ControlsProps {
   onShuffle: () => void;
   useSelectControls: boolean;
   onToggleSelectControls: () => void;
+  isZoomed: boolean;
+  onZoomToggle: () => void;
 }

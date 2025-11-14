@@ -66,10 +66,8 @@ const groupByWeek = (data: DataPoint[]): DataPoint[] => {
     const weekData = weeks.get(weekKey)!;
 
     Object.keys(point.visits).forEach((varId) => {
-      weekData.visits[varId] =
-        (weekData.visits[varId] || 0) + (point.visits[varId] || 0);
-      weekData.conversions[varId] =
-        (weekData.conversions[varId] || 0) + (point.conversions[varId] || 0);
+      weekData.visits[varId] = (weekData.visits[varId] || 0) + (point.visits[varId] || 0);
+      weekData.conversions[varId] = (weekData.conversions[varId] || 0) + (point.conversions[varId] || 0);
     });
   });
 
